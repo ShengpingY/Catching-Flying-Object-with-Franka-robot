@@ -1,0 +1,8 @@
+prefix=/home/shengpingyu/Project_ws_ros1/devel
+
+Name: robotmotion
+Description: Description of robotmotion
+Version: 0.0.1
+Cflags: -I/opt/ros/noetic/include
+Libs: -L${prefix}/lib /opt/ros/noetic/lib/x86_64-linux-gnu/libfranka.so.0.9.2
+Requires: roscpp rospy std_msgs eigen_conversions

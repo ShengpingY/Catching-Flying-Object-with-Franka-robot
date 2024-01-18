@@ -1,0 +1,8 @@
+prefix=/home/shengpingyu/Project_ws_ros1/devel
+
+Name: trajectoryplan
+Description: Description of trajectoryplan
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,2 @@
+robotmotion:trajectoryplan
+-DCATKIN_DEVEL_PREFIX=/home/shengpingyu/Project_ws_ros1/devel -DCMAKE_INSTALL_PREFIX=/home/shengpingyu/Project_ws_ros1/install -G Unix Makefiles
