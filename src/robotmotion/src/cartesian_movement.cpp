@@ -27,6 +27,10 @@ int main(int argc, char** argv) {
     std::cin.ignore();
     robot.control(motion_generator);
     std::cout << "Finished moving to initial joint configuration." << std::endl;
+    std::cout << "WARNING: This programm will move the robot! "
+              << "Please make sure to have the user stop button at hand!" << std::endl
+              << "Press Enter to continue..." << std::endl;
+    std::cin.ignore();
     // Set additional parameters always before the control loop, NEVER in the control loop!
     // Set collision behavior.
     robot.setCollisionBehavior(
@@ -49,46 +53,139 @@ int main(int argc, char** argv) {
 
     // recieve traj data
     std::vector<std::vector<double>> trjdata_position;
-    trjdata_position = read_csv("./src/trajectoryplan/src/traj_for_position.csv");
-    //std::vector<std::vector<double>> trjdata_velocity = read_csv("./src/trajectoryplan/src/traj_for_velocity.csv");
-    //std::vector<std::vector<double>> trjdata_acceleration = read_csv("./src/trajectoryplan/src/traj_for_acceleration.csv");
-    //std::vector<std::vector<double>> trjdata_jerk = read_csv("./src/trajectoryplan/src/traj_for_jerk .csv");
+    trjdata_position = read_csv("./src/trajectoryplan/src/traj_for_position");
+    std::vector<std::vector<double>> trjdata_velocity = read_csv("./src/trajectoryplan/src/traj_for_velocity");
+    std::vector<std::vector<double>> trjdata_acceleration = read_csv("./src/trajectoryplan/src/traj_for_acceleration");
+    std::vector<std::vector<double>> trjdata_jerk = read_csv("./src/trajectoryplan/src/traj_for_jerk");
 
-    std::array<double, 16> initial_pose;
+    // cartesianpose movement
     //double time = 0.0;
     int time_counter = 0; // under miliseconds 
-    robot.control([&time_counter, &initial_pose, &trjdata_position](const franka::RobotState& robot_state,
-                                         franka::Duration period) -> franka::CartesianPose {
+    double time = 0.0;
+    // robot.control([&time_counter, &trjdata_position, &trjdata_velocity, &trjdata_acceleration,&trjdata_jerk](const franka::RobotState& robot_state,
+    //                                      franka::Duration period) -> franka::CartesianPose {
 
                                     
-      int delta_t = period.toSec() * 1000;                             
-      time_counter += delta_t;
-      ROS_INFO("delta t is %d miliseconds",delta_t);
+    //   double delta_t = period.toSec();  
+    //   ROS_INFO("delta t is %f miliseconds",delta_t);                           
+    //   time_counter += delta_t * 1000;
+    //   ROS_INFO("time counter is %d miliseconds",time_counter);
+      
+    //   int x_size = trjdata_position[0].size();
+    //   ROS_INFO("size of x traj is %d miliseconds",x_size);
+    //   int y_size = trjdata_position[1].size();
+    //   int z_size = trjdata_position[2].size();
+
+
+    //   double x = trjdata_position[0][time_counter];
+    //   ROS_INFO("x's coordinates is %f",x);
+    //   double y = trjdata_position[1][time_counter];
+    //   double z = trjdata_position[2][time_counter];
+
+    //   double dx = trjdata_velocity[0][time_counter];
+    //   double dy = trjdata_velocity[1][time_counter];
+    //   double dz = trjdata_velocity[2][time_counter];
+    //   double ddx = trjdata_acceleration[0][time_counter];
+    //   double ddy = trjdata_acceleration[1][time_counter];
+    //   double ddz = trjdata_acceleration[2][time_counter];
+    //   double dddx = trjdata_jerk[0][time_counter];
+    //   double dddy = trjdata_jerk[1][time_counter];
+    //   double dddz = trjdata_jerk[2][time_counter];
+
+
+
+    //   // update cartesian
+    //   std::array<double, 16> new_pose = robot_state.O_T_EE_c;
+    //   if (time_counter < x_size) {
+    //     new_pose[12] = x;
+    //     ROS_INFO("x's coordinates is %f",x);
+    //     ROS_INFO("x's velocity is %f",dx);
+    //     ROS_INFO("x's accerlaration is %f",ddx);
+    //     ROS_INFO("x's jerk is %f",dddx);
+    //   }
+    //   // if (time_counter < y_size) {
+    //   //   new_pose[13] = y;
+    //   //   ROS_INFO("y's coordinates is %f",y);
+    //   // }
+    //   // if (time_counter < z_size) {
+    //   //   new_pose[14] = z;
+    //   //   ROS_INFO("z's coordinates is %f",z);
+    //   // }
+    //   if ((time_counter >= y_size-1) & (time_counter >= x_size-1) & (time_counter >= z_size-1)){
+    //     std::cout << std::endl << "Position readched! Holding Position" << std::endl;
+    //     return franka::MotionFinished(new_pose);
+    //   }
+    //   return new_pose;
+    // });
+    double secs =ros::Time::now().toSec();
+    double secs_last =ros::Time::now().toSec();  
+    robot.control([&secs_last, &secs, &time, &time_counter, &trjdata_position, &trjdata_velocity, &trjdata_acceleration,&trjdata_jerk](const franka::RobotState& robot_state,
+                                         franka::Duration period) -> franka::CartesianVelocities {
+                                          
+      // time upsate with ROS if see more precise   
+      secs =ros::Time::now().toSec();
+      ROS_INFO("Now time is %f miliseconds",secs);
+      double delta_t = secs - secs_last;
+      ROS_INFO("delta t is %f seconds",delta_t);  
+      time += delta_t * 1000;
+      time_counter = round(time);
+      ROS_INFO("time counter is %d miliseconds",time_counter);
+      secs_last = secs;       
+
+      // double delta_t = period.toMSec();  
+      // ROS_INFO("delta t is %f miliseconds",delta_t);                           
+      // time_counter += delta_t;
+      // ROS_INFO("time counter is %d miliseconds",time_counter);
+      
       int x_size = trjdata_position[0].size();
       int y_size = trjdata_position[1].size();
       int z_size = trjdata_position[2].size();
-
-
       double x = trjdata_position[0][time_counter];
       double y = trjdata_position[1][time_counter];
       double z = trjdata_position[2][time_counter];
+      double dx = trjdata_velocity[0][time_counter];
+      double dy = trjdata_velocity[1][time_counter];
+      double dz = trjdata_velocity[2][time_counter];
+      double ddx = trjdata_acceleration[0][time_counter];
+      double ddy = trjdata_acceleration[1][time_counter];
+      double ddz = trjdata_acceleration[2][time_counter];
+      double dddx = trjdata_jerk[0][time_counter];
+      double dddy = trjdata_jerk[1][time_counter];
+      double dddz = trjdata_jerk[2][time_counter];
+
+      double v_x,v_y,v_z;
+
 
       // update cartesian
-      std::array<double, 16> new_pose = initial_pose;
+
       if (time_counter < x_size) {
-        new_pose[12] = x;
+        v_x = dx;
+        ROS_INFO("x's coordinates is %f",x);
+        ROS_INFO("x's velocity is %f",dx);
+        ROS_INFO("x's accerlaration is %f",ddx);
+        ROS_INFO("x's jerk is %f",dddx);
       }
       if (time_counter < y_size) {
-        new_pose[13] = y;
+        v_y = dy;
+        ROS_INFO("y's coordinates is %f",y);
+        ROS_INFO("y's velocity is %f",dy);
+        ROS_INFO("y's accerlaration is %f",ddy);
+        ROS_INFO("y's jerk is %f",dddy);
       }
       if (time_counter < z_size) {
-        new_pose[14] = z;
+        v_z = dz;
+        ROS_INFO("z's coordinates is %f",z);
+        ROS_INFO("z's velocity is %f",dz);
+        ROS_INFO("z's accerlaration is %f",ddz);
+        ROS_INFO("z's jerk is %f",dddz);
+        
       }
+      franka::CartesianVelocities output = {{v_x, v_y, v_z, 0.0, 0.0, 0.0}};
       if ((time_counter >= y_size-1) & (time_counter >= x_size-1) & (time_counter >= z_size-1)){
         std::cout << std::endl << "Position readched! Holding Position" << std::endl;
-        return franka::MotionFinished(new_pose);
+        return franka::MotionFinished(output);
       }
-      return new_pose;
+      return output;
     });
   } catch (const franka::Exception& e) {
     std::cout << e.what() << std::endl;

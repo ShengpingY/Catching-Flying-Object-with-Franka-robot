@@ -8,6 +8,10 @@ using namespace std;
 vector<vector<double>> read_csv(string filename) {
     vector<vector<double>> data;
     ifstream file(filename);
+    if (!file.is_open()){
+        cout << "Error opening fle!" << endl;
+        exit(1);
+    }
     string line;
     while (getline(file, line)) {
         vector<double> row;
