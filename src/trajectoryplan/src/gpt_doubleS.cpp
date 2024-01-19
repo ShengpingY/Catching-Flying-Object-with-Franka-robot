@@ -443,9 +443,14 @@ void doubleS(const geometry_msgs::Point& v0, const geometry_msgs::Point& v1) {
     // Initialization of system parameter
     double T_s = 0.001;  // Sample time
     double v_0 = 0.0, v_1 = 0.0;  // Initial and final velocities
-    double v_max = 4.0, v_min = -4.0;  // Velocity constraints
-    double a_max = 7.5, a_min = -7.5;  // Acceleration constraints
-    double j_max = 3700.0, j_min = -3700.0;  // Jerk constraints
+    // following are calculated constraints but can't work
+    // double v_max = 4.0, v_min = -4.0;  // Velocity constraints
+    // double a_max = 7.5, a_min = -7.5;  // Acceleration constraints
+    // double j_max = 3700.0, j_min = -3700.0;  // Jerk constraints
+    // following are constraints for test
+    double v_max = 0.1, v_min = -0.1;  // Velocity constraints
+    double a_max = 2, a_min = -2;  // Acceleration constraints
+    double j_max = 10, j_min = -10;  // Jerk constraints
     double vx_0,vx_1,vy_0,vy_1,vz_0,vz_1;
     std::vector<std::vector<double>> matrix_tmpx;
     std::vector<std::vector<double>> matrix_tmpy;

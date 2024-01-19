@@ -64,15 +64,19 @@ int main(int argc, char** argv) {
     ros::Publisher pubtest0 = nh.advertise<geometry_msgs::Point> ("matlab",1000);
     ros::Publisher pubtest1 = nh.advertise<geometry_msgs::Point> ("state",1000);
     
-
+    int k = 0;
     while(ros::ok()) {
         geometry_msgs::Point destt;
         geometry_msgs::Point currt;
-        destt.x = 0.8; destt.y = -0.8; destt.z = -0.8;
-        currt.x = 0.3; currt.y = -0.3; currt.z = 0.2;
+        destt.x = 0.55; destt.y = -0.4; destt.z = 0.45;
+        currt.x = 0.306891; currt.y = -0.00005; currt.z = 0.486880;
         pubtest0.publish(destt);
         pubtest1.publish(currt);
         ROS_INFO("Publisher is publishing msgs, destination x is: %f", destt.x);
+        // if (k > 10){
+        //     return 0;
+        // }
+        // k++;
         ros::spinOnce();    
     }
 
