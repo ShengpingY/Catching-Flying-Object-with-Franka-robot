@@ -10,6 +10,21 @@
 #include "csvreader.cpp"
 #include <ros/ros.h>
 
+//implement an interpolation function to get corresponding value between two points in a vector
+double interpolate(std::vector<double> vector, double position){
+  //round position to the lower integer
+  int position_left = floor(position);
+  //round position to the upper integer
+  int position_right = ceil(position);
+  //get the value of the left and right position
+  double value_left = vector[position_left];
+  double value_right = vector[position_right];
+  //get the value of the position
+  double value = value_left + (value_right - value_left) * (position - position_left)/(position_right - position_left);
+  
+  return value;
+}
+
 int main(int argc, char** argv) {
   if (argc != 2) {
     std::cerr << "Usage: " << argv[0] << " <robot-hostname>" << std::endl;
@@ -42,7 +57,7 @@ int main(int argc, char** argv) {
 
     // read current position and publish them to trajplan under topic state
     franka::RobotState State =  robot.readOnce();
-    std::array<double, 16> current_state = State.O_T_EE_c;
+    std::array<double, 16> current_state = State.O_T_EE;
     geometry_msgs::Point cur;
     cur.x = current_state[12]; cur.y = current_state[13]; cur.z = current_state[14];
     ros::init(argc,argv,"robotmotion");
@@ -122,7 +137,7 @@ int main(int argc, char** argv) {
     robot.control([&secs_last, &secs, &time, &time_counter, &trjdata_position, &trjdata_velocity, &trjdata_acceleration,&trjdata_jerk](const franka::RobotState& robot_state,
                                          franka::Duration period) -> franka::CartesianVelocities {
                                           
-      // time upsate with ROS if see more precise   
+      // time upsate with ROS if see more precise  
       secs =ros::Time::now().toSec();
       ROS_INFO("Now time is %f miliseconds",secs);
       double delta_t = secs - secs_last;
@@ -136,28 +151,50 @@ int main(int argc, char** argv) {
       // ROS_INFO("delta t is %f miliseconds",delta_t);                           
       // time_counter += delta_t;
       // ROS_INFO("time counter is %d miliseconds",time_counter);
-      
+
       int x_size = trjdata_position[0].size();
       int y_size = trjdata_position[1].size();
       int z_size = trjdata_position[2].size();
-      double x = trjdata_position[0][time_counter];
-      double y = trjdata_position[1][time_counter];
-      double z = trjdata_position[2][time_counter];
-      double dx = trjdata_velocity[0][time_counter];
-      double dy = trjdata_velocity[1][time_counter];
-      double dz = trjdata_velocity[2][time_counter];
-      double ddx = trjdata_acceleration[0][time_counter];
-      double ddy = trjdata_acceleration[1][time_counter];
-      double ddz = trjdata_acceleration[2][time_counter];
-      double dddx = trjdata_jerk[0][time_counter];
-      double dddy = trjdata_jerk[1][time_counter];
-      double dddz = trjdata_jerk[2][time_counter];
+
+      // get interpolated value
+      double x = interpolate(trjdata_position[0],time);
+      double y = interpolate(trjdata_position[1],time);
+      double z = interpolate(trjdata_position[2],time);
+      double dx = interpolate(trjdata_velocity[0],time);
+      double dy = interpolate(trjdata_velocity[1],time);
+      double dz = interpolate(trjdata_velocity[2],time);
+      double ddx = interpolate(trjdata_acceleration[0],time);
+      double ddy = interpolate(trjdata_acceleration[1],time);
+      double ddz = interpolate(trjdata_acceleration[2],time);
+      double dddx = interpolate(trjdata_jerk[0],time);
+      double dddy = interpolate(trjdata_jerk[1],time);
+      double dddz = interpolate(trjdata_jerk[2],time);
+
+
+      // get the value of the position without interpolation but using integeous time counter
+      // double x = trjdata_position[0][time_counter];
+      // double y = trjdata_position[1][time_counter];
+      // double z = trjdata_position[2][time_counter];
+      // double dx = trjdata_velocity[0][time_counter];
+      // double dy = trjdata_velocity[1][time_counter];
+      // double dz = trjdata_velocity[2][time_counter];
+      // double ddx = trjdata_acceleration[0][time_counter];
+      // double ddy = trjdata_acceleration[1][time_counter];
+      // double ddz = trjdata_acceleration[2][time_counter];
+      // double dddx = trjdata_jerk[0][time_counter];
+      // double dddy = trjdata_jerk[1][time_counter];
+      // double dddz = trjdata_jerk[2][time_counter];
+
+      // get error between last sent command and current state
+      double error_x = x - robot_state.O_T_EE[12];
+      double error_y = y - robot_state.O_T_EE[13];
+      double error_z = z - robot_state.O_T_EE[14];
+      ROS_INFO("error_x is %f",error_x);
+      ROS_INFO("error_y is %f",error_y);
+      ROS_INFO("error_z is %f",error_z);
 
       double v_x,v_y,v_z;
-
-
       // update cartesian
-
       if (time_counter < x_size) {
         v_x = dx;
         ROS_INFO("x's coordinates is %f",x);
