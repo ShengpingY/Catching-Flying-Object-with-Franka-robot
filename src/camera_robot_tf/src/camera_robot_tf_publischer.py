@@ -13,34 +13,39 @@ point_A1, point_A2, point_A3 = None, None, None
 point_B1, point_B2, point_B3 = None, None, None
 
 def camerapoint_callback(msg):
-    global count, point_A1, point_A2, point_A3
-    print('get the camera point position is:\n', msg)
-    while True:
-        count = input('Please input the number of the CAMERA point:\n')
-        if count in ['1', '2', '3']:
-            count = int(count)
-            break
-        else:
-            print('Please input a valid number (1, 2, or 3).\n')
+    global point
+    point = np.array([msg.x, msg.y, msg.z])
 
-    if count == 1:
-        if point_A1 is not None:
-            print('The point A1 has been set. Please input another number.\n')
-        else:
-            point_A1 = np.array([msg.x, msg.y, msg.z])
-            print('point_A1 is :\n', point_A1)
-    elif count == 2:
-        if point_A2 is not None:
-            print('The point A2 has been set. Please input another number.\n')
-        else:
-            point_A2 = np.array([msg.x, msg.y, msg.z])
-            print('point_A2 is :\n', point_A2)
-    elif count == 3:
-        if point_A3 is not None:
-            print('The point A3 has been set. Please input another number.\n')
-        else:
-            point_A3 = np.array([msg.x, msg.y, msg.z])
-            print('point_A3 is :\n', point_A3)
+
+# def camerapoint_callback(msg):
+#     global count, point_A1, point_A2, point_A3
+#     print('get the camera point position is:\n', msg)
+#     while True:
+#         count = input('Please input the number of the CAMERA point:\n')
+#         if count in ['1', '2', '3']:
+#             count = int(count)
+#             break
+#         else:
+#             print('Please input a valid number (1, 2, or 3).\n')
+
+#     if count == 1:
+#         if point_A1 is not None:
+#             print('The point A1 has been set. Please input another number.\n')
+#         else:
+#             point_A1 = np.array([msg.x, msg.y, msg.z])
+#             print('point_A1 is :\n', point_A1)
+#     elif count == 2:
+#         if point_A2 is not None:
+#             print('The point A2 has been set. Please input another number.\n')
+#         else:
+#             point_A2 = np.array([msg.x, msg.y, msg.z])
+#             print('point_A2 is :\n', point_A2)
+#     elif count == 3:
+#         if point_A3 is not None:
+#             print('The point A3 has been set. Please input another number.\n')
+#         else:
+#             point_A3 = np.array([msg.x, msg.y, msg.z])
+#             print('point_A3 is :\n', point_A3)
 
 
 def robotendpoint_callback(msg):
@@ -116,15 +121,26 @@ def main():
 
 
     while not rospy.is_shutdown():
-        if point_A1 is not None and point_A2 is not None and point_A3 is not None \
-                and point_B1 is not None and point_B2 is not None and point_B3 is not None:
-            print('Now you can calculate the transformation matrix.')
-            rotation, translation = calculate_and_apply_transformmatrix()
-            print('The rotation matrix is:', rotation)
-            print('The translation matrix is:', translation)
-            publish_tf(rotation, translation)
-            print('The transformation matrix is published.')
-            # rospy.sleep(0.1) # 如果收集到足够的数据
+        # if point_A1 is not None and point_A2 is not None and point_A3 is not None \
+        #         and point_B1 is not None and point_B2 is not None and point_B3 is not None:
+
+        # move to point A
+        point_A1 = point
+        # move to point B
+        point_A2 = point
+        # move to point C
+        point_A3 = point
+        
+        #     print('Now you can calculate the transformation matrix.')
+        #     rotation, translation = calculate_and_apply_transformmatrix()
+        #     print('The rotation matrix is:', rotation)
+        #     print('The translation matrix is:', translation)
+        #     publish_tf(rotation, translation)
+        #     print('The transformation matrix is published.')
+        #     # rospy.sleep(0.1) # 如果收集到足够的数据
+
+
+        
 
 
 if __name__ == '__main__':
