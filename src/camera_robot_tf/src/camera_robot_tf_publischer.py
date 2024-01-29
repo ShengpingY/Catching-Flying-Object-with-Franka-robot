@@ -7,6 +7,7 @@ from franka_msgs.msg import FrankaState
 from geometry_msgs.msg import TransformStamped
 from geometry_msgs.msg import Point
 from camera_robot_tf.calculate_transformmatrix import CalculateTransformMatrix
+from panda_robot import PandaArm
 
 point_A1, point_A2, point_A3 = None, None, None
 point_B1, point_B2, point_B3 = None, None, None
@@ -67,20 +68,26 @@ def publish_tf(rotation, translation):
 
 def main():
     global point_A1, point_A2, point_A3, point_B1, point_B2, point_B3 ,point_A , point_B
+    moveRobot = PandaArm() # create PandaArm instance
     rospy.init_node('transformation_init', anonymous=True)
     rospy.Subscriber('/matlabinit', Point, camerapoint_callback, queue_size=1)
     rospy.Subscriber('/franka_state_controller/franka_states', FrankaState, robotendpoint_callback, queue_size=1)
     rospy.sleep(1)
+    moveRobot.move_to_neutral() # moves robot to neutral pose
     point_A1 = point_A
     point_B1 = point_B
     print('The point_A1 is:\n', point_A1)
     print('The point_B1 is:\n', point_B1)
-    input('Press Enter to confirm the first point and get the next point.')
+    input('Press Enter to confirm the first point and go to the next point.')
+    moveRobot.move_to_cartesian_pose(pos=[0.1,0.2,0.3]) # move the robot end-effector to pose specified by 'pos'
+    input('Press Enter to get the next point.')
     point_A2 = point_A
     point_B2 = point_B
     print('The point_A2 is:\n', point_A2)
     print('The point_B2 is:\n', point_B2)
-    input('Press Enter to confirm the second point and get the next point.')
+    input('Press Enter to confirm the second point and go to the next point.')
+    moveRobot.move_to_cartesian_pose(pos=[0.2,0.2,0.3]) # move the robot end-effector to pose specified by 'pos'
+    input('Press Enter to get the next point.')
     point_A3 = point_A
     point_B3 = point_B
     print('The point_A3 is:\n', point_A3)
