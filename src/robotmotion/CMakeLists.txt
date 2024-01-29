@@ -212,7 +212,15 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 add_executable(move_cartesian src/cartesian_movement.cpp)
+add_executable(move_cartesian_online src/cartesian_movement_online_plan.cpp)
 target_link_libraries(move_cartesian 
+			${catkin_LIBRARIES} 
+			${geometry_msgs_LIBRARIES} 
+			${Eigen_LIBRARIES} 
+			${Eigen3_LIBRARIES} 
+			${Franka_LIBRARIES}
+			${libfranka_LIBRARIES})
+target_link_libraries(move_cartesian_online 
 			${catkin_LIBRARIES} 
 			${geometry_msgs_LIBRARIES} 
 			${Eigen_LIBRARIES} 
