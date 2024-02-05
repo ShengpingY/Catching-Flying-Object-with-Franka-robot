@@ -43,7 +43,8 @@ def calculate_and_apply_transformmatrix():
     Init.point_B3 = point_B3
     Init.cali_rotation()
     Init.cali_translation()
-    return Init.m_rotation, Init.m_translation
+    transformation_Matrix = Init.get_transformmatrix()
+    return Init.m_rotation, Init.m_translation,transformation_Matrix
 
 def check_and_continue():
     input('Press Enter to confirm.')
@@ -65,6 +66,11 @@ def publish_tf(rotation, translation):
 
     broadcaster.sendTransform(tfs)
     rospy.spin()
+
+def get_point():
+    point_A = np.concatenate((point_A, np.array([1])), axis=0)
+    transformed_point = np.dot(transMatrix, point_A)[:3]
+    return transformed_point
 
 def main():
     global point_A1, point_A2, point_A3, point_B1, point_B2, point_B3 ,point_A , point_B
@@ -93,11 +99,12 @@ def main():
     print('The point_A3 is:\n', point_A3)
     print('The point_B3 is:\n', point_B3)
     print('Now you can calculate the transformation matrix.')
-    rotation, translation = calculate_and_apply_transformmatrix()
+    rotation, translation, transMatrix = calculate_and_apply_transformmatrix()
     print('The rotation matrix is:\n', rotation)
     print('The translation matrix is:\n', translation)
-    publish_tf(rotation, translation)
-    print('The transformation matrix is published.\n')
+    # publish_tf(rotation, translation)
+    print('The transformation matrix is:\n',transMatrix)
+    robotPoint = get_point()
 
 
 if __name__ == '__main__':
