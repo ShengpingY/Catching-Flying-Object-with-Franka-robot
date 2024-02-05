@@ -37,10 +37,11 @@ class CalculateTransformMatrix:
         self.m_translation = self.point_B1 - self.m_ratio * self.m_rotation @ self.point_A1
 
 
-    # def cali_transformmatrix(self):
-    #     self.cali_ratio()
-    #     self.cali_rotation()
-    #     self.cali_translation()
+    def get_transformmatrix(self):
+        transform_matrix = np.eye(4)
+        transform_matrix[:3, :3] = self.m_ratio * self.m_rotation
+        transform_matrix[:3, 3] = self.m_translation
+        return transform_matrix
     
     # def get_transformmatrix(self):
     #     return self.m_ratio, self.m_rotation, self.m_translation
