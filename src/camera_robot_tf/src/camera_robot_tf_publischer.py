@@ -22,6 +22,13 @@ def robotendpoint_callback(msg):
     global point_B
     point_B = np.array(msg.O_T_EE[12:15])
 
+def tranformed_coordinate_pub():
+    pub = rospy.Publisher('/transformed_coord', Point, queue_size=1)
+    rospy.init_node('talker', anonymous=True)
+    rate = rospy.Rate(100) # 10hz
+    while not rospy.is_shutdown():
+        pub.publish(robotPoint)
+        rate.sleep()
 
 def robot_subscriber():
     rospy.init_node('transformation_init_robot', anonymous=True)
@@ -105,6 +112,7 @@ def main():
     # publish_tf(rotation, translation)
     print('The transformation matrix is:\n',transMatrix)
     robotPoint = get_point()
+    tranformed_coordinate_pub()
 
 
 if __name__ == '__main__':
