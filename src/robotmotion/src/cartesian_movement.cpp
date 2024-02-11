@@ -9,224 +9,237 @@
 #include "geometry_msgs/Point.h"
 #include "csvreader.cpp"
 #include <ros/ros.h>
-
-//implement an interpolation function to get corresponding value between two points in a vector
-double interpolate(std::vector<double> vector, double position){
-  //round position to the lower integer
-  int position_left = floor(position);
-  //round position to the upper integer
-  int position_right = ceil(position);
-  //get the value of the left and right position
-  double value_left = vector[position_left];
-  double value_right = vector[position_right];
-  //get the value of the position
-  double value = value_left + (value_right - value_left) * (position - position_left)/(position_right - position_left);
-  
-  return value;
-}
+#include "cartesian_parabolic.h"
 
 int main(int argc, char** argv) {
-  if (argc != 2) {
-    std::cerr << "Usage: " << argv[0] << " <robot-hostname>" << std::endl;
-    return -1;
-  }
-  try {
-    franka::Robot robot(argv[1]);
-    setDefaultBehavior(robot);
-    // First move the robot to a suitable joint configuration
-    std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
-    MotionGenerator motion_generator(0.5, q_goal);
-    std::cout << "WARNING: This example will move the robot! "
-              << "Please make sure to have the user stop button at hand!" << std::endl
-              << "Press Enter to continue..." << std::endl;
-    std::cin.ignore();
-    robot.control(motion_generator);
-    std::cout << "Finished moving to initial joint configuration." << std::endl;
-    std::cout << "WARNING: This programm will move the robot! "
-              << "Please make sure to have the user stop button at hand!" << std::endl
-              << "Press Enter to continue..." << std::endl;
-    std::cin.ignore();
-    // Set additional parameters always before the control loop, NEVER in the control loop!
-    // Set collision behavior.
-    robot.setCollisionBehavior(
-        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-        {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
-        {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <robot-hostname>" << std::endl;
+        return -1;
+    }
+  
+    CartesianParabolic controller(argv[1]);
+    controller.run();
+
+    return 0;
+}
+
+// //implement an interpolation function to get corresponding value between two points in a vector
+// double interpolate(std::vector<double> vector, double position){
+//   //round position to the lower integer
+//   int position_left = floor(position);
+//   //round position to the upper integer
+//   int position_right = ceil(position);
+//   //get the value of the left and right position
+//   double value_left = vector[position_left];
+//   double value_right = vector[position_right];
+//   //get the value of the position
+//   double value = value_left + (value_right - value_left) * (position - position_left)/(position_right - position_left);
+  
+//   return value;
+// }
+
+// int main(int argc, char** argv) {
+//   if (argc != 2) {
+//     std::cerr << "Usage: " << argv[0] << " <robot-hostname>" << std::endl;
+//     return -1;
+//   }
+//   try {
+//     franka::Robot robot(argv[1]);
+//     setDefaultBehavior(robot);
+//     // First move the robot to a suitable joint configuration
+//     std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
+//     MotionGenerator motion_generator(0.5, q_goal);
+//     std::cout << "WARNING: This example will move the robot! "
+//               << "Please make sure to have the user stop button at hand!" << std::endl
+//               << "Press Enter to continue..." << std::endl;
+//     std::cin.ignore();
+//     robot.control(motion_generator);
+//     std::cout << "Finished moving to initial joint configuration." << std::endl;
+//     std::cout << "WARNING: This programm will move the robot! "
+//               << "Please make sure to have the user stop button at hand!" << std::endl
+//               << "Press Enter to continue..." << std::endl;
+//     std::cin.ignore();
+//     // Set additional parameters always before the control loop, NEVER in the control loop!
+//     // Set collision behavior.
+//     robot.setCollisionBehavior(
+//         {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+//         {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+//         {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
+//         {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
 
 
-    // read current position and publish them to trajplan under topic state
-    franka::RobotState State =  robot.readOnce();
-    std::array<double, 16> current_state = State.O_T_EE;
-    geometry_msgs::Point cur;
-    cur.x = current_state[12]; cur.y = current_state[13]; cur.z = current_state[14];
-    ros::init(argc,argv,"robotmotion");
-    ros::NodeHandle nh;
-    ros::Publisher pub_robotstate = nh.advertise<geometry_msgs::Point> ("state",1000);
-    pub_robotstate.publish(cur);
-    ROS_INFO("Robot's Endeffector's current state has been published with x = %f, y = %f, z = %f", cur.x, cur.y, cur.z);
+//     // read current position and publish them to trajplan under topic state
+//     franka::RobotState State =  robot.readOnce();
+//     std::array<double, 16> current_state = State.O_T_EE;
+//     geometry_msgs::Point cur;
+//     cur.x = current_state[12]; cur.y = current_state[13]; cur.z = current_state[14];
+//     ros::init(argc,argv,"robotmotion");
+//     ros::NodeHandle nh;
+//     ros::Publisher pub_robotstate = nh.advertise<geometry_msgs::Point> ("state",1000);
+//     pub_robotstate.publish(cur);
+//     ROS_INFO("Robot's Endeffector's current state has been published with x = %f, y = %f, z = %f", cur.x, cur.y, cur.z);
 
-    // recieve traj data
-    std::vector<std::vector<double>> trjdata_position;
-    trjdata_position = read_csv("./src/trajectoryplan/src/traj_for_position");
-    std::vector<std::vector<double>> trjdata_velocity = read_csv("./src/trajectoryplan/src/traj_for_velocity");
-    std::vector<std::vector<double>> trjdata_acceleration = read_csv("./src/trajectoryplan/src/traj_for_acceleration");
-    std::vector<std::vector<double>> trjdata_jerk = read_csv("./src/trajectoryplan/src/traj_for_jerk");
+//     // recieve traj data
+//     std::vector<std::vector<double>> trjdata_position;
+//     trjdata_position = read_csv("./src/trajectoryplan/src/traj_for_position");
+//     std::vector<std::vector<double>> trjdata_velocity = read_csv("./src/trajectoryplan/src/traj_for_velocity");
+//     std::vector<std::vector<double>> trjdata_acceleration = read_csv("./src/trajectoryplan/src/traj_for_acceleration");
+//     std::vector<std::vector<double>> trjdata_jerk = read_csv("./src/trajectoryplan/src/traj_for_jerk");
 
-    // cartesianpose movement
-    //double time = 0.0;
-    int time_counter = 0; // under miliseconds 
-    double time = 0.0;
-    // robot.control([&time_counter, &trjdata_position, &trjdata_velocity, &trjdata_acceleration,&trjdata_jerk](const franka::RobotState& robot_state,
-    //                                      franka::Duration period) -> franka::CartesianPose {
+//     // cartesianpose movement
+//     //double time = 0.0;
+//     int time_counter = 0; // under miliseconds 
+//     double time = 0.0;
+//     // robot.control([&time_counter, &trjdata_position, &trjdata_velocity, &trjdata_acceleration,&trjdata_jerk](const franka::RobotState& robot_state,
+//     //                                      franka::Duration period) -> franka::CartesianPose {
 
                                     
-    //   double delta_t = period.toSec();  
-    //   ROS_INFO("delta t is %f miliseconds",delta_t);                           
-    //   time_counter += delta_t * 1000;
-    //   ROS_INFO("time counter is %d miliseconds",time_counter);
+//     //   double delta_t = period.toSec();  
+//     //   ROS_INFO("delta t is %f miliseconds",delta_t);                           
+//     //   time_counter += delta_t * 1000;
+//     //   ROS_INFO("time counter is %d miliseconds",time_counter);
       
-    //   int x_size = trjdata_position[0].size();
-    //   ROS_INFO("size of x traj is %d miliseconds",x_size);
-    //   int y_size = trjdata_position[1].size();
-    //   int z_size = trjdata_position[2].size();
+//     //   int x_size = trjdata_position[0].size();
+//     //   ROS_INFO("size of x traj is %d miliseconds",x_size);
+//     //   int y_size = trjdata_position[1].size();
+//     //   int z_size = trjdata_position[2].size();
 
 
-    //   double x = trjdata_position[0][time_counter];
-    //   ROS_INFO("x's coordinates is %f",x);
-    //   double y = trjdata_position[1][time_counter];
-    //   double z = trjdata_position[2][time_counter];
+//     //   double x = trjdata_position[0][time_counter];
+//     //   ROS_INFO("x's coordinates is %f",x);
+//     //   double y = trjdata_position[1][time_counter];
+//     //   double z = trjdata_position[2][time_counter];
 
-    //   double dx = trjdata_velocity[0][time_counter];
-    //   double dy = trjdata_velocity[1][time_counter];
-    //   double dz = trjdata_velocity[2][time_counter];
-    //   double ddx = trjdata_acceleration[0][time_counter];
-    //   double ddy = trjdata_acceleration[1][time_counter];
-    //   double ddz = trjdata_acceleration[2][time_counter];
-    //   double dddx = trjdata_jerk[0][time_counter];
-    //   double dddy = trjdata_jerk[1][time_counter];
-    //   double dddz = trjdata_jerk[2][time_counter];
+//     //   double dx = trjdata_velocity[0][time_counter];
+//     //   double dy = trjdata_velocity[1][time_counter];
+//     //   double dz = trjdata_velocity[2][time_counter];
+//     //   double ddx = trjdata_acceleration[0][time_counter];
+//     //   double ddy = trjdata_acceleration[1][time_counter];
+//     //   double ddz = trjdata_acceleration[2][time_counter];
+//     //   double dddx = trjdata_jerk[0][time_counter];
+//     //   double dddy = trjdata_jerk[1][time_counter];
+//     //   double dddz = trjdata_jerk[2][time_counter];
 
 
 
-    //   // update cartesian
-    //   std::array<double, 16> new_pose = robot_state.O_T_EE_c;
-    //   if (time_counter < x_size) {
-    //     new_pose[12] = x;
-    //     ROS_INFO("x's coordinates is %f",x);
-    //     ROS_INFO("x's velocity is %f",dx);
-    //     ROS_INFO("x's accerlaration is %f",ddx);
-    //     ROS_INFO("x's jerk is %f",dddx);
-    //   }
-    //   // if (time_counter < y_size) {
-    //   //   new_pose[13] = y;
-    //   //   ROS_INFO("y's coordinates is %f",y);
-    //   // }
-    //   // if (time_counter < z_size) {
-    //   //   new_pose[14] = z;
-    //   //   ROS_INFO("z's coordinates is %f",z);
-    //   // }
-    //   if ((time_counter >= y_size-1) & (time_counter >= x_size-1) & (time_counter >= z_size-1)){
-    //     std::cout << std::endl << "Position readched! Holding Position" << std::endl;
-    //     return franka::MotionFinished(new_pose);
-    //   }
-    //   return new_pose;
-    // });
-    double secs =ros::Time::now().toSec();
-    double secs_last =ros::Time::now().toSec();  
-    robot.control([&secs_last, &secs, &time, &time_counter, &trjdata_position, &trjdata_velocity, &trjdata_acceleration,&trjdata_jerk](const franka::RobotState& robot_state,
-                                         franka::Duration period) -> franka::CartesianVelocities {
+//     //   // update cartesian
+//     //   std::array<double, 16> new_pose = robot_state.O_T_EE_c;
+//     //   if (time_counter < x_size) {
+//     //     new_pose[12] = x;
+//     //     ROS_INFO("x's coordinates is %f",x);
+//     //     ROS_INFO("x's velocity is %f",dx);
+//     //     ROS_INFO("x's accerlaration is %f",ddx);
+//     //     ROS_INFO("x's jerk is %f",dddx);
+//     //   }
+//     //   // if (time_counter < y_size) {
+//     //   //   new_pose[13] = y;
+//     //   //   ROS_INFO("y's coordinates is %f",y);
+//     //   // }
+//     //   // if (time_counter < z_size) {
+//     //   //   new_pose[14] = z;
+//     //   //   ROS_INFO("z's coordinates is %f",z);
+//     //   // }
+//     //   if ((time_counter >= y_size-1) & (time_counter >= x_size-1) & (time_counter >= z_size-1)){
+//     //     std::cout << std::endl << "Position readched! Holding Position" << std::endl;
+//     //     return franka::MotionFinished(new_pose);
+//     //   }
+//     //   return new_pose;
+//     // });
+//     double secs =ros::Time::now().toSec();
+//     double secs_last =ros::Time::now().toSec();  
+//     robot.control([&secs_last, &secs, &time, &time_counter, &trjdata_position, &trjdata_velocity, &trjdata_acceleration,&trjdata_jerk](const franka::RobotState& robot_state,
+//                                          franka::Duration period) -> franka::CartesianVelocities {
                                           
-      // time upsate with ROS if see more precise  
-      secs =ros::Time::now().toSec();
-      ROS_INFO("Now time is %f miliseconds",secs);
-      double delta_t = secs - secs_last;
-      ROS_INFO("delta t is %f seconds",delta_t);  
-      time += delta_t * 1000;
-      time_counter = round(time);
-      ROS_INFO("time counter is %d miliseconds",time_counter);
-      secs_last = secs;       
+//       // time upsate with ROS if see more precise  
+//       secs =ros::Time::now().toSec();
+//       ROS_INFO("Now time is %f miliseconds",secs);
+//       double delta_t = secs - secs_last;
+//       ROS_INFO("delta t is %f seconds",delta_t);  
+//       time += delta_t * 1000;
+//       time_counter = round(time);
+//       ROS_INFO("time counter is %d miliseconds",time_counter);
+//       secs_last = secs;       
 
-      // double delta_t = period.toMSec();  
-      // ROS_INFO("delta t is %f miliseconds",delta_t);                           
-      // time_counter += delta_t;
-      // ROS_INFO("time counter is %d miliseconds",time_counter);
+//       // double delta_t = period.toMSec();  
+//       // ROS_INFO("delta t is %f miliseconds",delta_t);                           
+//       // time_counter += delta_t;
+//       // ROS_INFO("time counter is %d miliseconds",time_counter);
 
-      int x_size = trjdata_position[0].size();
-      int y_size = trjdata_position[1].size();
-      int z_size = trjdata_position[2].size();
+//       int x_size = trjdata_position[0].size();
+//       int y_size = trjdata_position[1].size();
+//       int z_size = trjdata_position[2].size();
 
-      // get interpolated value
-      double x = interpolate(trjdata_position[0],time);
-      double y = interpolate(trjdata_position[1],time);
-      double z = interpolate(trjdata_position[2],time);
-      double dx = interpolate(trjdata_velocity[0],time);
-      double dy = interpolate(trjdata_velocity[1],time);
-      double dz = interpolate(trjdata_velocity[2],time);
-      double ddx = interpolate(trjdata_acceleration[0],time);
-      double ddy = interpolate(trjdata_acceleration[1],time);
-      double ddz = interpolate(trjdata_acceleration[2],time);
-      double dddx = interpolate(trjdata_jerk[0],time);
-      double dddy = interpolate(trjdata_jerk[1],time);
-      double dddz = interpolate(trjdata_jerk[2],time);
+//       // get interpolated value
+//       double x = interpolate(trjdata_position[0],time);
+//       double y = interpolate(trjdata_position[1],time);
+//       double z = interpolate(trjdata_position[2],time);
+//       double dx = interpolate(trjdata_velocity[0],time);
+//       double dy = interpolate(trjdata_velocity[1],time);
+//       double dz = interpolate(trjdata_velocity[2],time);
+//       double ddx = interpolate(trjdata_acceleration[0],time);
+//       double ddy = interpolate(trjdata_acceleration[1],time);
+//       double ddz = interpolate(trjdata_acceleration[2],time);
+//       double dddx = interpolate(trjdata_jerk[0],time);
+//       double dddy = interpolate(trjdata_jerk[1],time);
+//       double dddz = interpolate(trjdata_jerk[2],time);
 
 
-      // get the value of the position without interpolation but using integeous time counter
-      // double x = trjdata_position[0][time_counter];
-      // double y = trjdata_position[1][time_counter];
-      // double z = trjdata_position[2][time_counter];
-      // double dx = trjdata_velocity[0][time_counter];
-      // double dy = trjdata_velocity[1][time_counter];
-      // double dz = trjdata_velocity[2][time_counter];
-      // double ddx = trjdata_acceleration[0][time_counter];
-      // double ddy = trjdata_acceleration[1][time_counter];
-      // double ddz = trjdata_acceleration[2][time_counter];
-      // double dddx = trjdata_jerk[0][time_counter];
-      // double dddy = trjdata_jerk[1][time_counter];
-      // double dddz = trjdata_jerk[2][time_counter];
+//       // get the value of the position without interpolation but using integeous time counter
+//       // double x = trjdata_position[0][time_counter];
+//       // double y = trjdata_position[1][time_counter];
+//       // double z = trjdata_position[2][time_counter];
+//       // double dx = trjdata_velocity[0][time_counter];
+//       // double dy = trjdata_velocity[1][time_counter];
+//       // double dz = trjdata_velocity[2][time_counter];
+//       // double ddx = trjdata_acceleration[0][time_counter];
+//       // double ddy = trjdata_acceleration[1][time_counter];
+//       // double ddz = trjdata_acceleration[2][time_counter];
+//       // double dddx = trjdata_jerk[0][time_counter];
+//       // double dddy = trjdata_jerk[1][time_counter];
+//       // double dddz = trjdata_jerk[2][time_counter];
 
-      // get error between last sent command and current state
-      double error_x = x - robot_state.O_T_EE[12];
-      double error_y = y - robot_state.O_T_EE[13];
-      double error_z = z - robot_state.O_T_EE[14];
-      ROS_INFO("error_x is %f",error_x);
-      ROS_INFO("error_y is %f",error_y);
-      ROS_INFO("error_z is %f",error_z);
+//       // get error between last sent command and current state
+//       double error_x = x - robot_state.O_T_EE[12];
+//       double error_y = y - robot_state.O_T_EE[13];
+//       double error_z = z - robot_state.O_T_EE[14];
+//       ROS_INFO("error_x is %f",error_x);
+//       ROS_INFO("error_y is %f",error_y);
+//       ROS_INFO("error_z is %f",error_z);
 
-      double v_x,v_y,v_z;
-      // update cartesian
-      if (time_counter < x_size) {
-        v_x = dx;
-        ROS_INFO("x's coordinates is %f",x);
-        ROS_INFO("x's velocity is %f",dx);
-        ROS_INFO("x's accerlaration is %f",ddx);
-        ROS_INFO("x's jerk is %f",dddx);
-      }
-      if (time_counter < y_size) {
-        v_y = dy;
-        ROS_INFO("y's coordinates is %f",y);
-        ROS_INFO("y's velocity is %f",dy);
-        ROS_INFO("y's accerlaration is %f",ddy);
-        ROS_INFO("y's jerk is %f",dddy);
-      }
-      if (time_counter < z_size) {
-        v_z = dz;
-        ROS_INFO("z's coordinates is %f",z);
-        ROS_INFO("z's velocity is %f",dz);
-        ROS_INFO("z's accerlaration is %f",ddz);
-        ROS_INFO("z's jerk is %f",dddz);
+//       double v_x,v_y,v_z;
+//       // update cartesian
+//       if (time_counter < x_size) {
+//         v_x = dx;
+//         ROS_INFO("x's coordinates is %f",x);
+//         ROS_INFO("x's velocity is %f",dx);
+//         ROS_INFO("x's accerlaration is %f",ddx);
+//         ROS_INFO("x's jerk is %f",dddx);
+//       }
+//       if (time_counter < y_size) {
+//         v_y = dy;
+//         ROS_INFO("y's coordinates is %f",y);
+//         ROS_INFO("y's velocity is %f",dy);
+//         ROS_INFO("y's accerlaration is %f",ddy);
+//         ROS_INFO("y's jerk is %f",dddy);
+//       }
+//       if (time_counter < z_size) {
+//         v_z = dz;
+//         ROS_INFO("z's coordinates is %f",z);
+//         ROS_INFO("z's velocity is %f",dz);
+//         ROS_INFO("z's accerlaration is %f",ddz);
+//         ROS_INFO("z's jerk is %f",dddz);
         
-      }
-      franka::CartesianVelocities output = {{v_x, v_y, v_z, 0.0, 0.0, 0.0}};
-      if ((time_counter >= y_size-1) & (time_counter >= x_size-1) & (time_counter >= z_size-1)){
-        std::cout << std::endl << "Position readched! Holding Position" << std::endl;
-        return franka::MotionFinished(output);
-      }
-      return output;
-    });
-  } catch (const franka::Exception& e) {
-    std::cout << e.what() << std::endl;
-    return -1;
-  }
-  return 0;
-}
+//       }
+//       franka::CartesianVelocities output = {{v_x, v_y, v_z, 0.0, 0.0, 0.0}};
+//       if ((time_counter >= y_size-1) & (time_counter >= x_size-1) & (time_counter >= z_size-1)){
+//         std::cout << std::endl << "Position readched! Holding Position" << std::endl;
+//         return franka::MotionFinished(output);
+//       }
+//       return output;
+//     });
+//   } catch (const franka::Exception& e) {
+//     std::cout << e.what() << std::endl;
+//     return -1;
+//   }
+//   return 0;
+// }
