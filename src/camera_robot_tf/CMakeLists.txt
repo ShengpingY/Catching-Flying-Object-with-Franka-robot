@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   tf
   tf2_ros
+#  panda_robot
 )
 
 ## System dependencies are found with CMake's conventions

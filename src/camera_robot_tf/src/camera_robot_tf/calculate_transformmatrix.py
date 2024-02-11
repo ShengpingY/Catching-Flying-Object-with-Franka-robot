@@ -34,8 +34,13 @@ class CalculateTransformMatrix:
         self.m_rotation = np.array([vector_B1, vector_B2, vector_B3]).T @ np.linalg.inv(np.array([vector_A1, vector_A2, vector_A3]).T) 
 
     def cali_translation(self):
-        self.m_translation = self.point_B1 - self.m_ratio * self.m_rotation @ self.point_A1
+        self.m_translation = self.point_B1 -  self.m_rotation @ self.point_A1
 
+    def get_transformmatrix(self):
+        transform_matrix = np.eye(4)
+        transform_matrix[:3, :3] = self.m_rotation
+        transform_matrix[:3, 3] = self.m_translation
+        return transform_matrix
 
     # def cali_transformmatrix(self):
     #     self.cali_ratio()
