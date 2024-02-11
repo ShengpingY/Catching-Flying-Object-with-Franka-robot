@@ -61,7 +61,7 @@ array<double, 16> from_xyzrpy2transformation_matrix(array<double, 6> xyzrpy) {
  */
 array<double, 7> compute_inverse_kinematics(array<double, 6> xyzrpy, array<double, 7> q_actual) {
     // Compute inverse kinematics available solutions
-    array<array<double, 7>, 4> available_solutions = franka_IK_EE(from_xyzrpy2transformation_matrix(xyzrpy), 0.1, q_actual);
+    array<array<double, 7>, 4> available_solutions = franka_IK_EE(from_xyzrpy2transformation_matrix(xyzrpy), 0.5, q_actual);
 
     // Discard any solution with nan values
     array<array<double, 7>, 4> filtered_solutions;
@@ -83,7 +83,8 @@ array<double, 7> compute_inverse_kinematics(array<double, 6> xyzrpy, array<doubl
     // If no solutions, return current joint angles
     if (index == 0) {
         cout << "NO SOLUTIONS FOUND" << endl;
-        return q_actual;
+        array<double, 7> q_error = {{999999, -0.026, -1.62, -1.02, 0, 1.011, -0.931}};
+        return q_error;
     }
 
     // Select solution with smallest joint angle difference from q_actual

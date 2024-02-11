@@ -4,11 +4,11 @@
 #include <string>
 #include <franka/exception.h>
 #include <franka/robot.h>
-#include "examples_common.h"
-#include "examples_common.cpp"
+// #include "examples_common.h"
+// #include "examples_common.cpp"
 #include "geometry_msgs/Point.h"
 #include <ros/ros.h>
-#include "panda_ik.hpp"
+// #include "panda_ik.hpp"
 #include "Cartesian_movement_IK.h"
 
 // use class Cartesian_IK to avoid global variable
@@ -17,12 +17,14 @@ int main(int argc, char **argv) {
         std::cerr << "Usage: " << argv[0] << " <robot-hostname>" << std::endl;
         return -1;
     }
-    ros::init(argc, argv, "robotmotion");
-    Cartesian_IK movement(argv[1]);
-    movement.initial_pose();
-    while(ros::ok()){
-      movement.run();
-    }
+    // ros::init(argc, argv, "robotmotion");
+    Cartesian_IK movement(argv[1],argc,argv);
+    // movement.movement_together(argc,argv);
+    // movement.initial_pose();
+    // while(ros::ok()){
+    //   ROS_INFO("ROS OK!");
+    //   movement.run();
+    // }
     return 0;
 }
 
@@ -124,10 +126,10 @@ int main(int argc, char **argv) {
 //     std::cin.ignore();
 //     robot.control(motion_generator);
 //     // std::cout << "Finished moving to initial joint configuration." << std::endl;
-//     std::cout << "WARNING: This programm will move the robot! "
-//               << "Please make sure to have the user stop button at hand!" << std::endl
-//               << "Press Enter to continue..." << std::endl;
-//     std::cin.ignore();
+//     // std::cout << "WARNING: This programm will move the robot! "
+//     //           << "Please make sure to have the user stop button at hand!" << std::endl
+//     //           << "Press Enter to continue..." << std::endl;
+//     // std::cin.ignore();
 //     // Set additional parameters always before the control loop, NEVER in the control loop!
 //     // Set collision behavior.
 //     robot.setCollisionBehavior(
@@ -150,7 +152,10 @@ int main(int argc, char **argv) {
 //     pub_robotstate.publish(cur);
 //     ROS_INFO("Robot's Endeffector's current state has been published with x = %f, y = %f, z = %f", cur.x, cur.y, cur.z);
 //     ros::Subscriber desetinationSubscriber = nh.subscribe("matlab",1,IK_callback);
-
+//     std::cout << "WARNING: This programm will move the robot! "
+//               << "Please make sure to have the user stop button at hand!" << std::endl
+//               << "Press Enter to continue..." << std::endl;
+//     std::cin.ignore();
 
 //     int status_a = 0,status_b = 0;
 //     bool action_executed = true;

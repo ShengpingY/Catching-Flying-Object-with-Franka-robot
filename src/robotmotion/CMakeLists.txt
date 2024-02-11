@@ -213,6 +213,8 @@ include_directories(
 # catkin_add_nosetests(test)
 add_executable(move_cartesian src/cartesian_movement.cpp)
 add_executable(move_cartesian_online src/cartesian_movement_online_plan.cpp)
+add_executable(move_cartesian_IK src/cartesian_movement_IK.cpp)
+add_executable(state_pub src/state_publisher.cpp)
 target_link_libraries(move_cartesian 
 			${catkin_LIBRARIES} 
 			${geometry_msgs_LIBRARIES} 
@@ -221,6 +223,20 @@ target_link_libraries(move_cartesian
 			${Franka_LIBRARIES}
 			${libfranka_LIBRARIES})
 target_link_libraries(move_cartesian_online 
+			${catkin_LIBRARIES} 
+			${geometry_msgs_LIBRARIES} 
+			${Eigen_LIBRARIES} 
+			${Eigen3_LIBRARIES} 
+			${Franka_LIBRARIES}
+			${libfranka_LIBRARIES})
+target_link_libraries(move_cartesian_IK 
+			${catkin_LIBRARIES} 
+			${geometry_msgs_LIBRARIES} 
+			${Eigen_LIBRARIES} 
+			${Eigen3_LIBRARIES} 
+			${Franka_LIBRARIES}
+			${libfranka_LIBRARIES})
+target_link_libraries(state_pub 
 			${catkin_LIBRARIES} 
 			${geometry_msgs_LIBRARIES} 
 			${Eigen_LIBRARIES} 
