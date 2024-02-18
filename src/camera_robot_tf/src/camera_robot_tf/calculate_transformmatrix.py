@@ -42,11 +42,11 @@ class CalculateTransformMatrix:
         transform_matrix[:3, 3] = self.m_translation
         return transform_matrix
 
-    def get_transformmatrix(self):
-        transform_matrix = np.eye(4)
-        transform_matrix[:3, :3] = self.m_ratio * self.m_rotation
-        transform_matrix[:3, 3] = self.m_translation
-        return transform_matrix
+    # def get_transformmatrix(self):
+    #     transform_matrix = np.eye(4)
+    #     transform_matrix[:3, :3] = self.m_ratio * self.m_rotation
+    #     transform_matrix[:3, 3] = self.m_translation
+    #     return transform_matrix
     
     # def get_transformmatrix(self):
     #     return self.m_ratio, self.m_rotation, self.m_translation
