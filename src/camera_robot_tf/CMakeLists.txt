@@ -209,6 +209,7 @@ include_directories(
 # catkin_add_nosetests(test)
 catkin_install_python(PROGRAMS src/point_publischer_test.py
 				src/camera_robot_tf_publischer.py
+				src/camera_robot_tf_publischer_morepoint.py
 				src/transformation_init.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

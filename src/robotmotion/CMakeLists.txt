@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
 )
 find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(Franka 0.9.2 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
@@ -123,6 +124,7 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
   ${geometry_msgs_DIRS}
+  ${std_msgs_DIRS}
   ${Franka_DIRS}
   ${Eigen3_DIRS}
 )
@@ -215,8 +217,18 @@ add_executable(move_cartesian src/cartesian_movement.cpp)
 add_executable(move_cartesian_online src/cartesian_movement_online_plan.cpp)
 add_executable(move_cartesian_IK src/cartesian_movement_IK.cpp)
 add_executable(state_pub src/state_publisher.cpp)
+add_executable(move_joint src/Joint_space_movement.cpp)
+target_link_libraries(move_joint
+			${catkin_LIBRARIES} 
+			${std_msgs_LIBRARIES} 
+			${geometry_msgs_LIBRARIES} 
+			${Eigen_LIBRARIES} 
+			${Eigen3_LIBRARIES} 
+			${Franka_LIBRARIES}
+			${libfranka_LIBRARIES})
 target_link_libraries(move_cartesian 
 			${catkin_LIBRARIES} 
+			${std_msgs_LIBRARIES} 
 			${geometry_msgs_LIBRARIES} 
 			${Eigen_LIBRARIES} 
 			${Eigen3_LIBRARIES} 
@@ -238,7 +250,8 @@ target_link_libraries(move_cartesian_IK
 			${libfranka_LIBRARIES})
 target_link_libraries(state_pub 
 			${catkin_LIBRARIES} 
-			${geometry_msgs_LIBRARIES} 
+			${geometry_msgs_LIBRARIES}
+			${std_msgs_LIBRARIES} 
 			${Eigen_LIBRARIES} 
 			${Eigen3_LIBRARIES} 
 			${Franka_LIBRARIES}

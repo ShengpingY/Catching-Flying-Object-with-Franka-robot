@@ -4,8 +4,8 @@
 #include <string>
 #include <franka/exception.h>
 #include <franka/robot.h>
-#include "examples_common.h"
-#include "examples_common.cpp"
+// #include "examples_common.h"
+// #include "examples_common.cpp"
 #include "geometry_msgs/Point.h"
 #include "csvreader.cpp"
 #include <ros/ros.h>
@@ -17,8 +17,10 @@ int main(int argc, char** argv) {
         return -1;
     }
   
-    CartesianParabolic controller(argv[1]);
-    controller.run();
+    // RobotMotionController controller(argv[1],argc,argv);
+    // RobotMotionController_Trig controller(argv[1],argc,argv);
+    RobotMotionController_constantjerk controller(argv[1],argc,argv);
+    // controller.run();
 
     return 0;
 }

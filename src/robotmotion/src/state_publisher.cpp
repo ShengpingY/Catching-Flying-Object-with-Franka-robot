@@ -7,13 +7,15 @@
 #include "examples_common.h"
 #include "examples_common.cpp"
 #include "geometry_msgs/Point.h"
+#include "std_msgs/Float32MultiArray.h"
 #include <ros/ros.h>
 #include "panda_ik.hpp"
 
 
 std::array<double, 7> result_q;
 std::array<double, 16> state_for_IK_tfmatrix;
-std::array<double, 7> state_for_IK_q;
+// std::array<double, 7> state_for_IK_q;
+// std::array<double, 7> state_for_IK_dq;
 bool msg_received_flag = false;
 
 
@@ -104,6 +106,8 @@ int main(int argc, char** argv) {
     ros::init(argc,argv,"robotmotion");
     ros::NodeHandle nh;
     ros::Publisher pub_robotstate = nh.advertise<geometry_msgs::Point> ("state",1000);
+    ros::Publisher pub_jointPosi = nh.advertise<std_msgs::Float32MultiArray> ("joint_position",1000);
+    ros::Publisher pub_jointVelo = nh.advertise<std_msgs::Float32MultiArray> ("joint_velocity",1000);
     ros::Rate loop_rate(10);
     int status_a = 0,status_b = 0;
     bool action_executed = true;
@@ -111,13 +115,29 @@ int main(int argc, char** argv) {
     while(ros::ok()){
         State =  robot.readOnce();
         state_for_IK_tfmatrix = State.O_T_EE;
-        state_for_IK_q = State.q;
+        // state_for_IK_q = State.q;
+        // state_for_IK_dq = State.dq;
         geometry_msgs::Point cur;
+        std_msgs::Float32MultiArray state_for_IK_q;
+        std_msgs::Float32MultiArray state_for_IK_dq;
         cur.x = state_for_IK_tfmatrix[12]; cur.y = state_for_IK_tfmatrix[13]; cur.z = state_for_IK_tfmatrix[14];
+        for(int i = 0;i<7;i++){
+          state_for_IK_q.data.push_back(State.q[i]);
+          state_for_IK_dq.data.push_back(State.dq[i]);
+        }
         pub_robotstate.publish(cur);
+        pub_jointPosi.publish(state_for_IK_q);
+        pub_jointVelo.publish(state_for_IK_dq);
         ROS_INFO("Robot's Endeffector's current state has been published with x = %f, y = %f, z = %f", cur.x, cur.y, cur.z);
+        // ROS_INFO("Robot's Joint's Positions has been published with
+        //           joint_1 = %f, joint_2  = %f, joint_3  = %f, joint_4  = %f,
+        //           joint_5 = %f, joint_6  = %f, joint_7  = %f" , 
+        //           state_for_IK_q.data[0],state_for_IK_q.data[1],state_for_IK_q.data[2],state_for_IK_q.data[3],state_for_IK_q.data[4],state_for_IK_q.data[5],state_for_IK_q.data[6]);
+        // ROS_INFO("Robot's Joint's Velocitys has been published with 
+        //           joint_1 = %f, joint_2  = %f, joint_3  = %f, joint_4  = %f,
+        //           joint_5 = %f, joint_6  = %f, joint_7  = %f" , 
+        //           state_for_IK_dq.data[0],state_for_IK_dq.data[1],state_for_IK_dq.data[2],state_for_IK_dq.data[3],state_for_IK_dq.data[4],state_for_IK_dq.data[5],state_for_IK_dq.data[6]);        
         ros::spinOnce();
-      
     }
     // while(!msg_received_flag){
     //   ros::spinOnce();

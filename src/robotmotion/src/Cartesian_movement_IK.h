@@ -39,10 +39,10 @@ public:
           ROS_INFO("Robot's Endeffector's current state has been published with x = %f, y = %f, z = %f", cur.x, cur.y,
                    cur.z);
   
-          ros::Subscriber destinationSubscriber = nh.subscribe("/transformed_coord",1, &Cartesian_IK::IK_callback, this);
+          ros::Subscriber destinationSubscriber = nh.subscribe("/transformed_coord",10, &Cartesian_IK::IK_callback, this);
           std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
         //   std::array<double, 7> q_goal = {{1.347, 1.017, -2.106, -1.757, 0.8869, 1.2355, 0.1}};
-          MotionGenerator motion_generator(0.2, q_goal);
+          MotionGenerator motion_generator(0.6, q_goal);
           std::cout << "WARNING: This example will move the robot! "
                        "Please make sure to have the user stop button at hand!" << std::endl
                     << "Press Enter to continue..." << std::endl;
@@ -66,7 +66,7 @@ public:
             // ROS_INFO("ROS OK!");
             // ROS_INFO("Message received: %d", msg_received_flag);
             if(msg_received_flag){
-                MotionGenerator catch_motion(1.35, result_q);
+                MotionGenerator catch_motion(1, result_q);
                 robot.control(catch_motion);
                 msg_received_flag = false;
             } 
@@ -74,7 +74,10 @@ public:
 
       } catch (const franka::Exception& e) {
             std::cout << "Initialization failed: " << e.what() << std::endl;
-            throw;
+            ROS_INFO("Current Position is %f,%f,%f", robot.readOnce().O_T_EE[12], robot.readOnce().O_T_EE[13], robot.readOnce().O_T_EE[14]);
+
+            robot.automaticErrorRecovery();
+            // throw;
         }
     }
 
