@@ -1,5 +1,7 @@
 This project is based on optitrack, ROS-Noetic, ROS-Humble and Franka Panda Robot. Aim of it is trying to track a thrown ball with optitrack camera system and moving robot arm to predicted falling position.
 
+This work is contributed by [Yuzhe Ding](https://github.com/xdd0225), [Shengping Yu](https://github.com/ShengpingY) and Yuedong Zhai(https://github.com/kervinzhai) under supervision from Philipp Holzmann, Alexander Rose at [Control and Cyber-Physical Systems Laboratory (CCPS)](https://www.ccps.tu-darmstadt.de/ccps/index.en.jsp) of TU Darmstadt.
+
 Overall there are three parts of the this project:
   1. Parabolic prediction of the ball.
   2. Robot arm trajectory plan.
